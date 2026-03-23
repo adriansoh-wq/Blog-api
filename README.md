@@ -1,5 +1,6 @@
 API Backend - Blog
-#Description
+
+# Description
 
 Ce projet consiste en le développement d’une API Backend pour la gestion d’un blog, réalisé dans le cadre du cours INF222 – Développement Backend.
 L’API permet de gérer des articles (CRUD) avec des fonctionnalités de recherche et de filtrage.
@@ -11,14 +12,14 @@ Manipuler une base de données
 Structurer un projet backend
 Documenter une API avec Swagger
 
-#Technologies utilisées
+# Technologies utilisées
 
 Backend : Node.js (Express) (ou autre selon ton choix)
 Base de données : MongoDB / MySQL / SQLite
 Documentation API : Swagger
 Tests API : Postman / Swagger UI
 
-#Endpoints de l’API
+# Endpoints de l’API
 
 Créer un article
 POST /api/articles
@@ -33,23 +34,23 @@ Body :
   "tags": ["node", "api"]
 }
 
-#Récupérer tous les articles
+# Récupérer tous les articles
 
 GET /api/articles
 
-#Possibilité de filtrer :
+# Possibilité de filtrer :
 
 /api/articles?categorie=Tech&date=2026-03-18
 
-#Récupérer un article par ID
+# Récupérer un article par ID
 
 GET /api/articles/{id}
 
-#Modifier un article
+# Modifier un article
 
 PUT /api/articles/{id}
 
-#Supprimer un article
+# Supprimer un article
 
 DELETE /api/articles/{id}
 
@@ -57,7 +58,7 @@ DELETE /api/articles/{id}
 
 GET /api/articles/search?query=texte
 
-#Codes HTTP utilisés
+# Codes HTTP utilisés
 
 200 : Succès
 201 : Création réussie
@@ -65,7 +66,7 @@ GET /api/articles/search?query=texte
 404 : Ressource non trouvée
 500 : Erreur serveur
 
-#Documentation API
+# Documentation API
 
 La documentation est disponible via Swagger :
 http://localhost:3000/api-docs
