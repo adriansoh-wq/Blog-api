@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interface Test Blog - INF222</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 font-sans p-4 md:p-10">
+
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-10 text-center">
+            <h1 class="text-4xl font-extrabold text-slate-800"> Blog Manager </h1>
+            
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+           
+            <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg border-t-4 border-blue-600">
+                <h2 id="formTitle" class="text-xl font-bold mb-4 text-slate-700">Créer un Article</h2>
+                <input type="hidden" id="articleId">
+                <div class="space-y-4">
+                    <input id="title" type="text" placeholder="Titre de l'article *" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none">
+                    <input id="author" type="text" placeholder="Nom de l'auteur *" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none">
+                    <input id="category" type="text" placeholder="Catégorie (ex: Tech)" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none">
+                    <textarea id="content" placeholder="Contenu de l'article..." class="w-full border p-3 rounded-lg h-32 focus:ring-2 focus:ring-blue-400 outline-none"></textarea>
+                    <input id="tags" type="text" placeholder="Tags (ex: web, node, js)" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none">
+                   
+                    <div class="pt-4 flex gap-2">
+                        <button onclick="saveArticle()" id="btnSave" class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition shadow-md">Publier l'article</button>
+                        <button onclick="resetForm()" class="bg-slate-200 text-slate-600 px-4 py-3 rounded-lg hover:bg-slate-300 transition">Annuler</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 space-y-6">
+               
+                <div class="bg-white p-6 rounded-xl shadow-md flex flex-wrap gap-4 items-end">
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Recherche (Titre/Contenu)</label>
+                        <input id="searchInput" type="text" placeholder="Mot-clé..." class="w-full border p-2 rounded-lg">
+                    </div>
+                    <div class="w-40">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Catégorie</label>
+                        <input id="filterCategory" type="text" placeholder="Filtrer..." class="w-full border p-2 rounded-lg">
+                    </div>
+                    <button onclick="searchArticles()" class="bg-slate-800 text-white px-6 py-2 rounded-lg hover:bg-slate-900 transition"> Rechercher</button>
+                    <button onclick="fetchArticles()" class="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 transition"> Actualiser</button>
+                </div>
+
+                <div id="articlesList" class="space-y-4">
+                    <div class="text-center py-10 text-slate-400 italic">Chargement des articles...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api/articles';
+
+        // 1. LIRE LES ARTICLES (GET)
+        async function fetchArticles() {
+            const cat = document.getElementById('filterCategory').value;
+            let url = API_URL;
+            if (cat) url += `?categorie=${encodeURIComponent(cat)}`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                renderArticles(data.articles);
+            } catch (err) {
+                console.error(err);
+                alert("Erreur : Impossible de contacter le serveur (Vérifiez node server.js et CORS)");
+            }
+        }
+
+        // 2. RECHERCHER (GET /search)
+        async function searchArticles() {
+            const query = document.getElementById('searchInput').value;
+            if (!query) return fetchArticles();
+           
+            const response = await fetch(`${API_URL}/search?query=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            renderArticles(data.articles);
+        }
+
+        // Fonction pour dessiner la liste
+        function renderArticles(articles) {
+            const list = document.getElementById('articlesList');
+            list.innerHTML = '';
+
+            if (!articles || articles.length === 0) {
+                list.innerHTML = '<div class="bg-white p-10 rounded-xl text-center text-slate-400">Aucun article trouvé.</div>';
+                return;
+            }
+
+            articles.forEach(art => {
+                const div = document.createElement('div');
+                div.className = "bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex justify-between items-start hover:shadow-md transition";
+               
+                // Gestion sécurisée des tags (string vs array)
+                let tagsHtml = "";
+                try {
+                    const tagsArray = typeof art.tags === 'string' ? JSON.parse(art.tags) : art.tags;
+                    if(Array.isArray(tagsArray)) {
+                        tagsHtml = tagsArray.map(t => `<span class="bg-blue-100 text-blue-600 px-2 py-0.5 rounded text-[10px] font-bold mr-1">#${t.trim()}</span>`).join('');
+                    }
+                } catch(e) { tagsHtml = ""; }
+
+                div.innerHTML = `
+                    <div class="flex-1 pr-4">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-[10px] font-bold py-0.5 px-2 bg-slate-100 text-slate-600 rounded uppercase">${art.categorie || 'Général'}</span>
+                            <span class="text-[10px] text-slate-400">${art.date}</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800">${art.titre}</h3>
+                        <p class="text-slate-600 text-sm mt-2 line-clamp-2">${art.contenu}</p>
+                        <div class="mt-3 flex items-center justify-between">
+                            <span class="text-xs text-slate-500 italic">Auteur : <b>${art.auteur}</b></span>
+                            <div class="flex">${tagsHtml}</div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <button onclick="loadArticleToEdit(${art.id})" class="text-blue-500 hover:bg-blue-50 p-2 rounded transition text-sm font-bold">Modifier</button>
+                        <button onclick="deleteArticle(${art.id})" class="text-red-500 hover:bg-red-50 p-2 rounded transition text-sm font-bold">Supprimer</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // 3. CRÉER OU MODIFIER (POST / PUT)
+        async function saveArticle() {
+            const id = document.getElementById('articleId').value;
+            const article = {
+                titre: document.getElementById('title').value,
+                auteur: document.getElementById('author').value,
+                categorie: document.getElementById('category').value,
+                contenu: document.getElementById('content').value,
+                tags: document.getElementById('tags').value.split(',').map(t => t.trim()),
+                date: new Date().toLocaleDateString('fr-FR')
+            };
+
+            if (!article.titre || !article.auteur) {
+                alert("Le titre et l'auteur sont obligatoires !");
+                return;
+            }
+
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API_URL}/${id}` : API_URL;
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(article)
+                });
+
+                if (response.ok) {
+                    resetForm();
+                    fetchArticles();
+                    alert(id ? "Article mis à jour !" : "Nouvel article publié !");
+                }
+            } catch (err) { alert("Erreur lors de l'enregistrement"); }
+        }
+
+        // 4. CHARGER UN ARTICLE POUR ÉDITION (GET /id)
+        async function loadArticleToEdit(id) {
+            try {
+                const response = await fetch(`${API_URL}/${id}`);
+                const art = await response.json();
+               
+                document.getElementById('articleId').value = art.id;
+                document.getElementById('title').value = art.titre;
+                document.getElementById('author').value = art.auteur;
+                document.getElementById('category').value = art.categorie;
+                document.getElementById('content').value = art.contenu;
+               
+                // Conversion des tags pour le champ texte
+                try {
+                    const t = typeof art.tags === 'string' ? JSON.parse(art.tags) : art.tags;
+                    document.getElementById('tags').value = Array.isArray(t) ? t.join(', ') : '';
+                } catch(e) { document.getElementById('tags').value = ''; }
+               
+                document.getElementById('formTitle').innerText = "Modifier l'article";
+                document.getElementById('btnSave').innerText = "Mettre à jour";
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (err) { alert("Erreur lors du chargement de l'article"); }
+        }
+
+        // 5. SUPPRIMER (DELETE)
+        async function deleteArticle(id) {
+            if (confirm("Voulez-vous vraiment supprimer cet article ?")) {
+                try {
+                    await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                    fetchArticles();
+                } catch (err) { alert("Erreur lors de la suppression"); }
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('articleId').value = '';
+            document.getElementById('title').value = '';
+            document.getElementById('author').value = '';
+            document.getElementById('category').value = '';
+            document.getElementById('content').value = '';
+            document.getElementById('tags').value = '';
+            document.getElementById('formTitle').innerText = "Créer un Article";
+            document.getElementById('btnSave').innerText = "Publier l'article";
+        }
+
+        // Chargement initial au démarrage
+        fetchArticles();
+    </script>
+</body>
+</html>
