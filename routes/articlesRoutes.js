@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const articleController = require('../controllers/artController');
+const articleController = require('../controllers/articleController');
 
 /**
 * @swagger
@@ -44,7 +44,7 @@ const articleController = require('../controllers/artController');
 * 201:
 * description: Création réussie
 */
-router.post('/', artController.createArticle);
+router.post('/', articleController.createArticle);
 
 /**
 * @swagger
